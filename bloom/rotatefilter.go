@@ -5,14 +5,10 @@
  * Refer: https://github.com/tylertreat/BoomFilters/
  * */
 
-package bloomfilter
+package bloom
 
 import (
-    "fmt"
-    //"math"
-    "hash"
-    "hash/fnv"
-
+    //"fmt"
     "time"
 )
 
@@ -103,7 +99,7 @@ func (rf *RotateFilter) Add(hashCode uint32) bool {
 }
 
 func (rf *RotateFilter) Check(hashCode uint32) int32 {
-    fmt.Println(hashCode, rf.counts)
+    //fmt.Println(hashCode, rf.counts)
     delta := (hashCode >> 17) | (hashCode << 15);
     // check in all filters
     for i := uint32(0); i < rf.ntable; i++ {

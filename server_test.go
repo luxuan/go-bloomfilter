@@ -1,7 +1,8 @@
 package main
 
 import (
-    //"fmt"
+    "fmt"
+    "sync"
     "testing"
     "github.com/bradfitz/gomemcache/memcache"
 )
@@ -38,3 +39,39 @@ func TestIncr(t *testing.T) {
         t.Errorf("Incr exist key error", err)
     }
 }
+
+
+// go test -test.bench="."
+
+const nroutine = 1000
+const moretimes = 100
+func BenchmarkAdd(b *testing.B) {  
+    b.StopTimer()  
+
+    keyPrefix := "set_key"
+    var mcs [nroutine]*memcache.Client
+    for i := 0; i < nroutine; i++ {
+        mcs[i] = memcache.New("127.0.0.1:11211")
+
+        // pre get because the lazy connecting strategy
+        mcs[i].Get(keyPrefix) 
+    }
+
+    b.StartTimer()  
+
+
+    var wg sync.WaitGroup
+    nloop := b.N / nroutine * moretimes
+    for i := 0; i < nroutine; i++ {  
+        wg.Add(1)
+        go func(idx int) {
+            defer wg.Done()
+
+            for j := 0; j < nloop; j++ {  
+                key := fmt.Sprintf("%s_%d_%d", keyPrefix, i, j)
+                mcs[idx].Get(key)
+            }
+        }(i)
+    }  
+    wg.Wait()
+}  
